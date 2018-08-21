@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="60 seconds" debug="false" packagingData="false">
+	<property name="APPLICATION_NAME" value="my-lib" />
+
+	<property name="log.rootLevel" value="INFO" />
+	<property name="log.maxHistory" value="30" />
+	<property name="log.maxFileSize" value="10KB" />
+	<property name="log.totalSizeCap" value="100MB"/>
+	<property name="log.debugFile" value="${APPLICATION_NAME}_debug.log" />
+	<property name="log.errorFile" value="${APPLICATION_NAME}_error.log" />
+	<property name="log.filePath" value="${HOME}/Development/apps/${APPLICATION_NAME}/logs" />
+	<property name="log.filePattern"
+		value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%20.20thread] %-5level %-60logger{60} : %msg%n" />
+		<!-- 使用 %-min.max(%commond)组合多种命令并格式化输出 -->
+	<property name="log.consolePattern"
+		value="%d{HH:mm:ss.SSS} [%15.15thread] %highlight(%-5level) %cyan(%-80.80(%logger{60}.%.-20method)) : %msg%n" />
+
+	<!-- appender是最后负责输出logging events，appender将event的formatting 委托给layout 或 
+		encoder -->
+	<appender name="STDOUT"
+		class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>${log.consolePattern}</pattern>
+			<charset>utf-8</charset>
+		</encoder>
+	</appender>
+
+	<appender name="FILE"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<filter class="ch.qos.logback.classic.filter.LevelFilter">
+		<!-- 仅过滤 error，即接受除error下的level -->
+			<level>ERROR</level>
+			<onMatch>DENY</onMatch>
+			<onMismatch>NEUTRAL</onMismatch>
+		</filter>
+		<filter class="ch.qos.logback.classic.filter.LevelFilter">
+		<!-- 仅过滤 error，即接受除error下的level -->
+			<level>DEBUG</level>
+			<onMatch>DENY</onMatch>
+			<onMismatch>NEUTRAL</onMismatch>
+		</filter>
+		<encoder>
+			<pattern>${log.filePattern}</pattern>
+			<!-- 如果显示设置了immediateFlush，日志文件将不会加载内容，如果再次设置为true并运行，将会加载所有已经产生的日志 -->
+			<!-- <immediateFlush>false</immediateFlush> -->
+			<!-- <outputPatternAsHeader>true</outputPatternAsHeader> -->
+		</encoder>
+		<file>${log.filePath}/${log.debugFile}</file>
+		<rollingPolicy
+			class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>${log.filePath}/${log.debugFile}.%d{yyyy-MM-dd}.gz</fileNamePattern>
+			<maxHistory>${log.maxHistory}</maxHistory>
+			<totalSizeCap>${log.totalSizeCap}</totalSizeCap>
+		</rollingPolicy>
+	</appender>
+
+	<appender name="FILE_ERROR"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<!-- 仅接受error -->
+		<filter class="ch.qos.logback.classic.filter.LevelFilter">
+			<level>ERROR</level>
+			<onMatch>ACCEPT</onMatch>
+			<onMismatch>DENY</onMismatch>
+		</filter>
+		<encoder>
+			<pattern>${log.filePattern}</pattern>
+			<!-- <immediateFlush>false</immediateFlush> -->
+			<!-- <outputPatternAsHeader>true</outputPatternAsHeader> -->
+		</encoder>
+		<file>${log.filePath}/${log.errorFile}</file>
+		<rollingPolicy
+			class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>${log.filePath}/${log.errorFile}.%d{yyyy-MM-dd}.gz</fileNamePattern>
+			<maxHistory>${log.maxHistory}</maxHistory>
+			<totalSizeCap>${log.totalSizeCap}</totalSizeCap>
+		</rollingPolicy>
+	</appender>
+	<!-- <appender name="fileInfoLog" class="ch.qos.logback.core.rolling.RollingFileAppender"> 
+		<encoder> <pattern>${log.pattern}</pattern> </encoder> <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy"> 
+		<fileNamePattern></fileNamePattern> </rollingPolicy> </appender> -->
+
+
+	<logger name="cn.navyd.lib" level="DEBUG"
+		additivity="true">
+		<appender-ref ref="FILE" />
+		<appender-ref ref="FILE_ERROR" />
+	</logger>
+
+	<root level="${log.rootLevel}">
+		<appender-ref ref="STDOUT" />
+	</root>
+</configuration>
