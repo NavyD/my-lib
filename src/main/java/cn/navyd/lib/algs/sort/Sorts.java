@@ -1,16 +1,111 @@
 package cn.navyd.lib.algs.sort;
 
+import java.util.Random;
+
 public class Sorts {
+    private static final Random RANDOM = new Random(new Random().nextLong());
+    private static final int CUTOFF = 15;
     
-    public static <T extends Comparable<? super T>> void insertion(T[] a) {
-        for (int i = 1; i < a.length; i++) {
-            T val = a[i];
-            int j = i;
-            while (j > 0 && less(val, a[j-1]))
-                // 注意：先执行j--，再执行后面的j ===> a[j--] = a[j-1]会导致先j--再j-1越界
-                a[j--] = a[j];
-            a[j] = val;
+    public static <T extends Comparable<? super T>> void shuffle(T[] a) {
+        shuffle(a, 0, a.length);
+    }
+    
+    public static <T extends Comparable<? super T>> void shuffle(T[] a, int start, int end) {
+        for (int i = start; i < end; i++) {
+            int r = i + RANDOM.nextInt(end-i);
+            exch(a, i, r);
         }
+    }
+    
+    public static <T extends Comparable<? super T>> void quick(T[] a) {
+        shuffle(a);
+        quickSort(a, 0, a.length - 1);
+    }
+    
+    private static <T extends Comparable<? super T>> void quickSort(T[] a, int lo, int hi) {
+        // 在子数组length = CUTOFF时使用插入排序
+        if (lo + CUTOFF > hi) {
+            insertion(a, lo, hi + 1);
+            return;
+        }
+        int j = partition(a, lo, hi);
+        quickSort(a, lo, j - 1);
+        quickSort(a, j + 1, hi);
+    }
+    
+    private static <T extends Comparable<? super T>> int partition(T[] a, int lo, int hi) {
+        int i = lo, j = hi + 1;
+        // 切分元素
+        T v = a[i];
+        while (true) {
+            // 左 --> 右扫描，直到找到一个 e > v
+            while (less(a[++i], v))
+                if (i >= hi)
+                    break;
+            // 右 --> 左扫描，直到找到一个 e < v，找到自动退出循环
+            while (less(v, a[--j]))
+                ;
+            // 指针相遇，切分完成，必定有 左 <= v <= 右
+            if (i >= j)
+                break;
+            // 交换，使得 左大 右小 --> 左小 右大
+            exch(a, i, j);
+        }
+        exch(a, lo, j);
+        return j;
+    }
+    
+    /**
+     * 归并排序
+     * @param a
+     */
+    @SuppressWarnings("unchecked")
+    public static <T extends Comparable<? super T>> void merger(T[] a) {
+        final int len = a.length;
+        // 辅助排序数组
+        T[] aux = (T[]) new Comparable[len];
+        for (int sz = 1; sz < len; sz += sz) {
+            // 最后一个小数组的开始下标
+            int n = len - sz;
+            for (int lo = 0; lo < n; lo += sz*2) {
+                // 归并 小数组，如果最后小数组的长度过小，则end = len
+                int end = Math.min(lo + sz*2, len);
+                // 对于归并排序非递归版本，小数组使用插入排序并不能减少时间
+//                if (sz < 0) insertion(a, lo, end);
+                merg(a, aux, lo, lo + sz - 1, end);
+            }
+        }
+        
+    }
+    
+    /**
+     * 希尔排序。改进的插入排序
+     * @param a
+     */
+    public static <T extends Comparable<? super T>> void shell(T[] a) {
+        int len = a.length, h = 1;
+        // 计算间隔
+        while (h < len / 3) h = 3 * h + 1;
+        while (h > 0) {
+            // 数组间隔h 对应元素有序
+            for (int i = h; i < len; i++) {
+                T val = a[i];
+                int j = i;
+                // 移位操作
+                while (j >= h && less(val, a[j-h]))
+                    a[j] = a[j -= h];
+                a[j] = val;
+            }
+            h /= 3;
+        }
+    }
+    
+    /**
+     * 插入排序
+     * @param a
+     */
+    public static <T extends Comparable<? super T>> void insertion(T[] a) {
+        insertion(a, 0, a.length);
     }
     
     /**
@@ -33,10 +128,67 @@ public class Sorts {
      * @return
      */
     public static <T extends Comparable<? super T>> boolean isSorted(T[] a) {
-        for (int i = 1; i < a.length; i++)
+        return isSorted(a, 0, a.length);
+    }
+    
+    public static <T extends Comparable<? super T>> boolean isSorted(T[] a, int start, int end) {
+        int min = minIndex(a, start, end);
+        if (min != start)
+            return false;
+        for (int i = start + 1; i < end; i++)
             if (less(a[i], a[i-1]))
                 return false;
         return true;
+    }
+    
+    /**
+     * 对数组a在指定范围start..end内使用插入排序
+     * @param a
+     * @param start
+     * @param end
+     */
+    private static <T extends Comparable<? super T>> void insertion(T[] a, int start, int end) {
+        if (start >= a.length)
+            return;
+        // 找出最小的元素下标
+        int min = minIndex(a, start, end);
+        // 交换 使得最小元素下标为0
+        exch(a, min, start);
+        for (int i = start + 1; i < end; i++) {
+            T val = a[i];
+            int j = i;
+            // 将大的元素向后移位，代替交换位置exch() 最小元素下标为0，不需要边界条件 j > 0
+            while (less(val, a[j-1]))
+                // 注意：先执行j--，再执行后面的j ===> a[j--] = a[j-1]会导致先j--再j-1越界
+                a[j--] = a[j];
+            a[j] = val;
+        }
+    }
+    
+    /**
+     * 归并两个有序小数组lo..mid, mid+1..end为一个有序数组lo..end，不包括end
+     */
+    private static <T extends Comparable<? super T>> void merg(T[] a, T[] aux, int start, int mid, int end) {
+        // 已经有序
+        if (less(a[mid], a[mid+1]))
+            return;
+        int i = start, j = mid + 1;
+        // 复制两个有序的小数组
+//        for (int k = start; k < end; k++)
+//            aux[k] = a[k];
+        System.arraycopy(a, start, aux, start, end-start);
+        // 合并两个有序小数组为一个有序小数组
+        for (int k = start; k < end; k++)
+            //左边数组用尽，取右边元素
+            if (i > mid)
+                a[k] = aux[j++];
+            //反之
+            else if (j >= end)
+                a[k] = aux[i++];
+            else if (less(aux[j], aux[i]))
+                a[k] = aux[j++];
+            else
+                a[k] = aux[i++];
     }
     
     /**
@@ -63,6 +215,30 @@ public class Sorts {
      */
     private static <T extends Comparable<? super T>> boolean less(T v, T w) {
         return v.compareTo(w) < 0;
+    }
+    
+    /**
+     * 获取数组a的最小的下标。
+     * @param a
+     * @return
+     */
+//    private static <T extends Comparable<? super T>> int minIndex(T[] a) {
+//        return minIndex(a, 0, a.length);
+//    }
+    
+    /**
+     * 从数组范围[start..end)查找最小的下标。不包括end
+     * @param a
+     * @param start
+     * @param end
+     * @return
+     */
+    private static <T extends Comparable<? super T>> int minIndex(T[] a, int start, int end) {
+        int minIndex = start;
+        for (int i = start; i < end; i++)
+            if (less(a[i], a[minIndex]))
+                minIndex = i;
+        return minIndex;
     }
     
     /**
