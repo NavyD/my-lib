@@ -22,7 +22,7 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 
-#maven
+# maven
 target/
 pom.xml.tag
 pom.xml.releaseBackup
@@ -34,9 +34,10 @@ buildNumber.properties
 .mvn/timing.properties
 .mvn/wrapper/maven-wrapper.jar
 
-src/test/resources/
-
 # eclipse
 .project
 .classpath
 .settings/
+
+# test data数据过大，先过滤
+src/test/resources/
