@@ -23,7 +23,7 @@ public class SortsTest {
         int len = 5000000;
         a = new Integer[len];
         for (int i = 0; i < len; i++)
-            a[i] = random.nextInt(len/100);
+            a[i] = random.nextInt(len*10);
         
         assertFalse(Sorts.isSorted(a));
     }
@@ -89,7 +89,21 @@ public class SortsTest {
                     assertTrue(Sorts.isSorted(a));
                 })
                 .start()
-                .runThenStop(() -> QuickX.sort(a));
+                .runThenStop(() -> Sorts.quick(a));
+        log.debug("ms: {}", watch.getAvgTimeMillis());
+    }
+    
+    @Test
+    public void headTest() {
+        watch.frequency(freq)
+                .before(() -> {
+                    setArray();
+                })
+                .after(() -> {
+                    assertTrue(Sorts.isSorted(a));
+                })
+                .start()
+                .runThenStop(() -> Sorts.heap(a));
         log.debug("ms: {}", watch.getAvgTimeMillis());
     }
 }

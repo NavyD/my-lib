@@ -4,12 +4,64 @@ import java.util.Random;
 
 public class Sorts {
     private static final Random RANDOM = new Random(new Random().nextLong());
-    private static final int CUTOFF = 15;
+    // 快速排序切换插入排序数组长度
+    private static final int QUICK_CUTOFF = 15;
     
+    /**
+     * 堆排序
+     * @param a
+     */
+    public static <T extends Comparable<? super T>> void  heap(T[] a) {
+        final int len = a.length;
+        // 构造一个完整的大顶堆
+        for (int i = (len/2)-1; i >= 0; i--)
+            sink(a, i, len);
+        int i = len;
+        // 从大顶堆中选择最大的元素下标0交换到数组最后，使得数组有序
+        while (i-- > 0) {
+            exch(a, 0, i);
+            // 交换的小元素0下沉保持堆有序
+            sink(a, 0, i);
+        }
+    }
+    
+    /**
+     * 对大顶堆指定位置k在[0..length)范围内下沉调整k到合适的位置。堆数组从0开始
+     * @param a
+     * @param k
+     * @param length
+     */
+    private static <T extends Comparable<? super T>> void  sink(T[] a, int k, int length) {
+        int i = k;
+        // 父节点i(k)的左子节点
+        while ((i = (2*i + 1)) < length) {
+            // 如果存在i+1子节点，则获取较大的子节点下标
+            if (i+1 < length && less(a[i], a[i+1]))
+                i++;
+            // 如果父节点k >= 子节点中较大的一个i，满足大顶堆的定义，退出
+            if (!less(a[k], a[i]))
+                break;
+            // 父节点 k < 大的子节点i 则交换两者 
+            exch(a, i, k);
+            // 将父节点变为子节点的位置，继续向下调整
+            k = i;
+        }
+    }
+    
+    /**
+     * 随机打乱整个数组
+     * @param a
+     */
     public static <T extends Comparable<? super T>> void shuffle(T[] a) {
         shuffle(a, 0, a.length);
     }
     
+    /**
+     * 随机打乱数组a在[start..end)范围的元素
+     * @param a
+     * @param start
+     * @param end
+     */
     public static <T extends Comparable<? super T>> void shuffle(T[] a, int start, int end) {
         for (int i = start; i < end; i++) {
             int r = i + RANDOM.nextInt(end-i);
@@ -24,7 +76,7 @@ public class Sorts {
     
     private static <T extends Comparable<? super T>> void quickSort(T[] a, int lo, int hi) {
         // 在子数组length = CUTOFF时使用插入排序
-        if (lo + CUTOFF > hi) {
+        if (lo + QUICK_CUTOFF > hi) {
             insertion(a, lo, hi + 1);
             return;
         }
