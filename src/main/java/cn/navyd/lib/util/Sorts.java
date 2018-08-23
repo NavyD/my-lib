@@ -1,4 +1,4 @@
-package cn.navyd.lib.algs.sort;
+package cn.navyd.lib.util;
 
 import java.util.Random;
 

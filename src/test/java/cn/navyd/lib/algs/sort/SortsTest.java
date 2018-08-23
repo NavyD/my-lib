@@ -8,6 +8,7 @@ import java.util.Random;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import cn.navyd.lib.util.Sorts;
 import cn.navyd.lib.util.StrictWatchRunner;
 import cn.navyd.lib.util.WatchRunner;
 import lombok.extern.slf4j.Slf4j;
